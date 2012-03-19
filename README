@@ -1,6 +1,10 @@
 
 
 这个Demo是对HTML5 File API 相关功能的一个展示, 暂时是只支持Chrome浏览器
+参考API文档
+http://www.w3.org/TR/FileAPI/
+http://www.w3.org/TR/file-system-api/
+http://www.w3.org/TR/file-writer-api/
 
 V0.1 功能包括
 1)新建，删除文本文件,双击编辑文本文件
@@ -10,5 +14,6 @@ V0.1 功能包括
 4)下载浏览器文件系统中的文件至本地硬盘
 5)打开文本文件，进行编辑，保存
 6)浏览图片文件
+
 
 DEMO地址   http://superwunc.github.com/HTML5-FileSystem-Demo/
