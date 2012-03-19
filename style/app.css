@@ -1,0 +1,224 @@
+/* dialog style start */
+
+.dialog {
+    border: 1px solid #050505;
+    border-radius: 5px;
+    background-color: #1d1d1d;
+    position: absolute;
+    padding: 10px;
+    display: none;
+}
+
+.dialog-content {
+    margin-top: 35px;
+    overflow: auto;
+    width: 500px;
+    height: 400px;
+}
+
+.dialog-close {
+    position: absolute;
+    display: block;
+    width: 32px;
+    height: 32px;
+    top: 5px;
+    right: 10px;
+    background: url(images/dialog-close.png) center center no-repeat;
+}
+
+.dialog-close:hover {
+    background: url(images/dialog-close-hover.png) center center no-repeat;
+}
+
+.dialog-title {
+    position: absolute;
+    top: 5px;
+    left: 10px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.dialog-toolbar {
+    text-align: right;
+}
+/* dialog style end */
+
+html, body {
+    height: 100%;
+    padding: 0px;
+    margin: 0px;
+    overflow: hidden;
+}
+#file-system {
+    border: 1px solid #050505;
+    border-radius: 5px;
+    height: 90%;
+    margin: 5px;
+    background-color: #1d1d1d;
+}
+p {
+    color: #ebebeb;
+}
+#file-system-header {
+    text-align: center;
+    border-bottom: 1px solid #000000;
+    padding-bottom: 5px;
+}
+#file-system-toolbar {
+    text-align: left;
+}
+#file-system-nav {
+    text-align: left;
+}
+#file-system-content {
+    padding: 5px;
+}
+
+.toolbtn {
+    display: inline-block;
+    color: #9a9a9a;
+    padding: 2px 10px;
+    border: 1px solid #010101;
+    border-radius: 3px;
+    -webkit-box-shadow: 0px 1px 1px rgba(255,255,255,0.1) inset, 
+    0px 1px 1px rgba(255,255,255,0.3);
+    margin-left: 5px;
+    width: 36px;
+    height: 36px;
+}
+#add-file {
+    background: url(images/file-add.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#292929), to(#181818));
+}
+#add-file:hover {
+    background: url(images/file-add.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#c2c2c2), to(#555555));
+}
+#delete-file {
+    background: url(images/file-remove.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#292929), to(#181818));
+}
+#delete-file:hover {
+    background: url(images/file-remove.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#c2c2c2), to(#555555));
+}
+#download-file {
+    background: url(images/file-download.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#292929), to(#181818));
+}
+#download-file:hover {
+    background: url(images/file-download.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#c2c2c2), to(#555555));
+}
+#upload-file-warpper {
+    background: url(images/file-upload.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#292929), to(#181818));
+}
+#upload-file-warpper:hover {
+    background: url(images/file-upload.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#c2c2c2), to(#555555));
+}
+#save {
+    background: url(images/file-save.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#292929), to(#181818));
+}
+#save:hover {
+    background: url(images/file-save.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#c2c2c2), to(#555555));
+}
+#cancel {
+    background: url(images/cancel.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#292929), to(#181818));
+}
+#cancel:hover {
+    background: url(images/cancel.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#c2c2c2), to(#555555));
+}
+#add-folder {
+    background: url(images/folder-add.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#292929), to(#181818));
+}
+#add-folder:hover {
+    background: url(images/folder-add.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#c2c2c2), to(#555555));
+}
+
+.nav-folder {
+    display: inline-block;
+    color: #9a9a9a;
+    padding: 2px 10px;
+    border: 1px solid #010101;
+    border-radius: 3px;
+    background: -webkit-gradient(linear, 0 0, 0 100%, from(#292929), to(#181818));
+    -webkit-box-shadow: 0px 1px 1px rgba(255,255,255,0.1) inset, 
+    0px 1px 1px rgba(255,255,255,0.3);
+    margin-left: 5px;
+}
+
+.nav-folder:hover {
+    color: #0b0b0b;
+    background: -webkit-gradient(linear, 0 0, 0 100%, from(#c2c2c2), to(#555555));
+    cursor: pointer;
+}
+/* folder file style start */
+.folder, .file {
+    display: inline-block;
+    width: 100px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    color: #ebebeb;
+}
+
+.folder-selected, .file-selected {
+    border-color: #010101;
+    background: -webkit-gradient(linear, 0 0, 0 100%, from(#0061a4), to(#003b6a));
+}
+
+.folder:hover, .file:hover {
+    border-color: #010101;
+    color: #ffffff;
+    background: -webkit-gradient(linear, 0 0, 0 100%, from(#0061a4), to(#003b6a));
+}
+
+.file .file-icon {
+    background: url(images/file.png) center center no-repeat;
+    min-width: 36px;
+    height: 36px;
+}
+
+.file .file-name {
+
+    padding: 5px;
+    text-align: center;
+}
+
+.folder .folder-icon {
+    background: url(images/folder.png) center center no-repeat;
+    height: 36px;
+    min-width: 36px;
+}
+
+.folder .folder-name {
+    color: #ebebeb;
+    padding: 5px;
+    text-align: center;
+}
+/* folder file style end */
+
+/* file upload style start */
+
+.file-input {
+    position: relative;
+    top: -22px;
+}
+
+.file-input input[type="file"] {
+    position: relative;
+    margin: 0px;
+    -moz-opacity: 0;
+    filter: alpha(opacity: 0);
+    opacity: 0;
+    z-index: 2;
+}
+
+/* file upload style end */
