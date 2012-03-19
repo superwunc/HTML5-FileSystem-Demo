@@ -169,15 +169,37 @@
             alert("请选择文件夹或者文件");
             return;
         }
-        var path = currentSelectedEntry.fullPath;
-        fs.deleteFile(path, {
-            "success" : function(file) {
-                removeEntry(file);
-                var domId = "file-" + path;
-                var domNode = document.getElementById(domId);
-                domNode.parentNode.removeChild(domNode);
+        else {
+            var result = 
+            window.confirm("确认 要删除  \"" + currentSelectedEntry.name + "\"");
+            if (result == false) {
+                return ;
             }
-        })
+        }
+        var path = currentSelectedEntry.fullPath;
+        if (currentSelectedEntry.isFile == true) {
+            fs.deleteFile(path, {
+                "success" : function(file) {
+                    removeEntry(file);
+                    currentSelectedEntry = null;
+                    var domId = "file-" + path;
+                    var domNode = document.getElementById(domId);
+                    domNode.parentNode.removeChild(domNode);
+                }
+            });
+        }
+        else {
+            fs.deleteDir(path, {
+                "success" : function(dir) {
+                    removeEntry(dir);
+                    currentSelectedEntry = null;
+                    var domId = "folder-" + path;
+                    var domNode = document.getElementById(domId);
+                    domNode.parentNode.removeChild(domNode);
+                }
+            });
+        }
+
     }
     
     function downloadFile() {
