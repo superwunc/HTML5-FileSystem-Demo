@@ -14,7 +14,9 @@
     var CREATE_IF_NOT_FOUND = {create: true, exclusive: false};
     var NO_CREATE = {create: false};
     
-    var reqFS = window.webkitRequestFileSystem || window.moz_requestFileSystem || window.requestFileSystem  ;
+    var reqFS = window.webkitRequestFileSystem 
+    || window.mozRequestFileSystem 
+    || window.requestFileSystem  ;
     var BlobBuilder =  window.BlobBuilder 
                || window.MozBlobBuilder 
                || window.WebKitBlobBuilder 
@@ -94,7 +96,7 @@
                   function (file) {
                       file.remove(
                           function () {
-                              executeSuccessCallback(option, file)
+                              executeSuccessCallback(option, file);
                           }, 
                           function (error) {
                               executeErrorCallback(option, error);
@@ -107,6 +109,23 @@
            function (error) {
                 executeErrorCallback(option, error);
            });
+   }
+   
+   function deleteDir(path, option) {
+        getDir(path, {
+            "success": function (dir) {
+                dir.removeRecursively(
+                    function () {
+                        executeSuccessCallback(option, dir);
+                    },
+                    function (error) {
+                        executeErrorCallback(option, error);
+                    })
+            },
+            "error": function (error) {
+                executeErrorCallback(option, error);
+            }
+        });    
    }
    
    function _listFiles(dir, option) {
@@ -254,6 +273,7 @@
    fs["createNewFile"] = createNewFile;
    fs["createNewDir"] = createNewDir;
    fs["deleteFile"] = deleteFile;
+   fs["deleteDir"] = deleteDir;
    fs["listFiles"] = listFiles;
    fs["getFile"] = getFile;
    fs["getDir"] = getDir;
