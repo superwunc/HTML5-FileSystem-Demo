@@ -103,6 +103,7 @@
     
     function ondblclickFile(ele) {
         var path = ele.getAttribute("data-path");
+        console.log("ondblclickFile");
         showFile(path);
     }
     
@@ -121,8 +122,11 @@
 
     function onclickFolder(ele) {
         var path = ele.getAttribute("data-path");
+        if ((currentSelectedEntry != null) 
+            && (currentSelectedEntry.fullPath == path)) {
+            return;
+        }
         ele.className = "folder folder-selected";
-        console.log("click");
         fs.getDir(path, {
             "success": function (dir) {
                 removeSelectedEntryStyle();
@@ -134,6 +138,10 @@
 
     function onclickFile(ele) {
         var path = ele.getAttribute("data-path");
+        if ((currentSelectedEntry != null) 
+            && (currentSelectedEntry.fullPath == path)) {
+            return;
+        }
         ele.className = "file file-selected";
         fs.getFile(path, {
             "success": function (file) {
