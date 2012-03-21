@@ -238,7 +238,7 @@
         fs.createNewFile(path + "/" + fileName, {
             "success" : function(file) {
                 addFileNode(file);
-                editFileName(file);
+                editEntryName(file);
                 addEntrys([file]);
             }
         });
@@ -426,6 +426,7 @@
         fs.createNewDir(path + "/" + folderName, {
             "success" : function(dir) {
                 addFolderNode(dir);
+                editEntryName(dir);
                 addEntrys([dir]);
             }
         });
