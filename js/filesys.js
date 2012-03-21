@@ -36,6 +36,7 @@
     var currentCopyEntry = null;
     var currentCutEntry = null;
     var currentEntrys = [];
+    var currentEntrysMap = {};
     var currentPath = null;
 
     function init() {
@@ -234,7 +235,7 @@
     function newFile() {
         var path = currentPath;
         var fileName = getNewTitle("file", 
-                        PREFIX_NEW_FILE_TITLE, currentEntrys) + ".txt";
+                        PREFIX_NEW_FILE_TITLE, currentEntrysMap) + ".txt";
         fs.createNewFile(path + "/" + fileName, {
             "success" : function(file) {
                 addFileNode(file);
@@ -422,7 +423,8 @@
 
     function newDir() {
         var path = currentPath;
-        var folderName = getNewTitle("folder", PREFIX_NEW_FOLDER_TITLE, currentEntrys);
+        var folderName = getNewTitle("folder", 
+                PREFIX_NEW_FOLDER_TITLE, currentEntrysMap);
         fs.createNewDir(path + "/" + folderName, {
             "success" : function(dir) {
                 addFolderNode(dir);
@@ -432,16 +434,29 @@
         });
     }
     
+    function findEntry(node) {
+        while(!node.getAttribute("data-path")){
+            node = node.parentNode;
+        };
+        return getEntry(node.getAttribute("data-path"));
+    }
+    
     function rename() {
         var newName = titleRenameInput.value;
-        if (currentSelectedEntry.name == newName) {
+        var editEntry = findEntry(titleRenameInput);
+        var isResetCurrentSelected = false;
+        if (currentSelectedEntry && (
+            currentSelectedEntry.fullPath == editEntry.fullPath)) {
+            isResetCurrentSelected = true;
+        }
+        if (editEntry.name == newName) {
             return;
         }
         
         var nodeNode = null;
         
         var titleNode = titleRenameInput.parentNode;
-        if (currentSelectedEntry.isFile == true) {
+        if (editEntry.isFile == true) {
             nodeNode = findFileNode(titleNode);
         }
         else {
@@ -449,10 +464,16 @@
         }
         
         var newNameTextNode = document.createTextNode(newName);
-        fs.rename(currentSelectedEntry, newName, {
+        fs.rename(editEntry, newName, {
             "success": function (entry) {
                 window.setTimeout(function () {
-                    currentSelectedEntry = entry;
+                    if (isResetCurrentSelected) {
+                        currentSelectedEntry = entry;
+                    }
+                    removeEntry(editEntry);
+                    addEntrys([entry]);
+                    //currentEntrysMap[]
+                    
                     if (entry.isFile) {
                         nodeNode.id = "file-" + entry.fullPath;
                     }
@@ -460,10 +481,8 @@
                         nodeNode.id = "folder-" + entry.fullPath;
                     }
                     nodeNode.setAttribute("data-path", entry.fullPath);
-                    
                     titleNode.replaceChild(newNameTextNode, titleRenameInput);
-                }, 30)
-                
+                }, 30);
             }
         })
     }
@@ -574,11 +593,14 @@
     
     function addEntrys(entrys) {
         for (var i = 0 , l = entrys.length; i < l; i++) {
-            currentEntrys.push(entrys[i]);
+           // currentEntrys.push(entrys[i]);
+            currentEntrysMap[entrys[i].fullPath] = entrys[i];
         }
+        
     }
     
     function removeEntry(entry) {
+        /*
         var index = null;
         for (var i = 0 , l = currentEntrys.length; i < l; i++) {
             if (entry.fullPath == currentEntrys[i].fullPath) {
@@ -587,7 +609,22 @@
             }
         }
         currentEntrys.splice(index, 1);
+        */
+       currentEntrysMap[entry.fullPath] = null;
+       delete currentEntrysMap[entry.fullPath];
         
+    }
+    
+    function getEntry(fullPath) {
+        return currentEntrysMap[fullPath];
+        /*
+        var index = null;
+        for (var i = 0 , l = currentEntrys.length; i < l; i++) {
+            if (fullPath == currentEntrys[i].fullPath) {
+                return currentEntrys[i];
+            }
+        }
+        */
     }
      
     function updateFSNavFolder(dir) {
@@ -610,16 +647,16 @@
     }
     
     
-     function getNewTitle(type, prefix, entrys) {
+     function getNewTitle(type, prefix, entrysMap) {
         //NewNoteIndex++;
         var titleIndexMap = {};
-        var count = entrys.length;
+       // var count = entrys.length;
         var title = null;
         var index = null;
         var entry = null;
         var newTitleIndex = 1;
-        for (var i = 0; i < count; i++) {
-            entry = entrys[i];
+        for (var path in entrysMap) {
+            entry = entrysMap[path];
             if ((type == "file") && (entry.isFile == false)) {
                 continue;
             }
@@ -644,6 +681,7 @@
 
     function clearFSContent() {
         currentEntrys = [];
+        currentEntrysMap = {};
         currentSelectedEntry = null;
         console.log("clearFSContent", currentSelectedEntry);
         fileSystemContent.innerHTML = "";
