@@ -15,5 +15,8 @@ V0.1 功能包括
 5)打开文本文件，进行编辑，保存
 6)浏览图片文件
 
+V0.1.1 功能新增
+1)右键剪切，拷贝，重命名(对同名文件，文件夹的处理还要加强)
+
 
 DEMO地址   http://superwunc.github.com/HTML5-FileSystem-Demo/

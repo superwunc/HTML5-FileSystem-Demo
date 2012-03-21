@@ -44,6 +44,34 @@
        }
    }
    
+   
+    function errorHandler(e) {
+        var msg = "";
+        switch (e.code) {
+            case FileError.QUOTA_EXCEEDED_ERR:
+                msg = 'QUOTA_EXCEEDED_ERR';
+                break;
+            case FileError.NOT_FOUND_ERR:
+                msg = 'NOT_FOUND_ERR';
+                break;
+            case FileError.SECURITY_ERR:
+                msg = 'SECURITY_ERR';
+                break;
+            case FileError.INVALID_MODIFICATION_ERR:
+                msg = 'INVALID_MODIFICATION_ERR';
+                break;
+            case FileError.INVALID_STATE_ERR:
+                msg = 'INVALID_STATE_ERR';
+                break;
+            default:
+                msg = 'Unknown Error';
+                break;
+        };
+
+        console.log('Error: ' + msg);
+    }
+
+   
    function executeErrorCallback(option, args) {
        if (option && option["error"]) {
            var param = [];
@@ -52,6 +80,8 @@
            }
            option["error"].apply(window, param);
        }
+       errorHandler(args);
+       console.log(args);
    }
    
    function createNewFile(path, option) {
@@ -270,6 +300,215 @@
            });
    }
    
+   function _move(fromEntry, toEntry, option) {  
+       var newName = option["newName"] ? option["newName"] : fromEntry.name;     
+       fromEntry.moveTo(toEntry, newName , 
+              function (entry) {
+                  executeSuccessCallback(option, entry);
+              },
+              function (error) {
+                  executeErrorCallback(option, error);
+              })
+   }
+   
+   function move(fromPath, toPath, option) {
+       if (!isString(fromPath) && !isString(toPath)) {
+            _move(fromPath, toPath, option);
+            return ;
+       }
+       reqFS(fs.config.type, fs.config.size , 
+           function (fileSystem) {
+               if (!isString(fromPath)) {
+                   var fromEntry = fromPath;
+                   if (toPath == "/") {
+                      _move(fromEntry, fileSystem.root, option); 
+                      return;
+                   }
+                   fileSystem.root.getDirectory(toPath, 
+                      NO_CREATE,
+                      function (toDir) {
+                          _move(fromEntry, toDir, option);
+                      },
+                      function (error) {
+                          executeErrorCallback(option, error);
+                      });  
+               }
+               
+           }, 
+           function (error) {
+                executeErrorCallback(option, error);
+           });
+   }
+   
+   function _copy(fromEntry, toEntry, option) {
+       
+       var newName = option["newName"] ? option["newName"] : fromEntry.name;
+       fromEntry.copyTo(toEntry, newName , 
+          function (entry) {
+              executeSuccessCallback(option, entry);
+          },
+          function (error) {
+              executeErrorCallback(option, error);
+          }); 
+   }
+   
+   
+   function copy(fromPath, toPath, option) {
+       if (!isString(fromPath) && !isString(toPath)) {
+            _copy(fromPath, toPath, option);
+            return ;
+       }
+       reqFS(fs.config.type, fs.config.size , 
+           function (fileSystem) {
+               if (!isString(fromPath)) {
+                   var fromEntry = fromPath;
+                   fileSystem.root.getDirectory(toPath, 
+                      NO_CREATE,
+                      function (toDir) {
+                          _copy(fromEntry, toDir, option);
+                      },
+                      function (error) {
+                          executeErrorCallback(option, error);
+                      });  
+               }
+               
+           }, 
+           function (error) {
+                executeErrorCallback(option, error);
+           });
+   }
+   
+   
+
+   
+   function replace(fromEntry, parentEntry, targetEntry, option) {
+      var type = option["type"] ? option["type"] : "copy";
+      targetEntry.remove(
+          function () {
+              if (type == "copy") {
+                  fromEntry.copyTo(parentEntry, fromEntry.name, 
+                      function (entry) {
+                          executeSuccessCallback(option, entry);
+                      },
+                      function (error) {
+                          executeErrorCallback(option, error);
+                      }); 
+              }
+              else {
+                  fromEntry.moveTo(parentEntry, fromEntry.name, 
+                      function (entry) {
+                          executeSuccessCallback(option, entry);
+                      },
+                      function (error) {
+                          executeErrorCallback(option, error);
+                      }); 
+              }
+              
+          },
+          function (error) {
+              executeErrorCallback(option, error);
+          }
+      )
+   }
+   
+   function _findSameNameEntry(formEntry, toEntry, option) {
+       if (formEntry.isFile == true) {
+           toEntry.getFile(formEntry.name, NO_CREATE, 
+               function (file) {
+                   if (option && option["found"]) {
+                       option["found"](formEntry, toEntry, file);
+                   }
+               },
+               function (error) {
+                   if (error.code == FileError.NOT_FOUND_ERR) {
+                       if (option && option["nofound"]) {
+                           option["nofound"](formEntry, toEntry);
+                       }
+                   }
+               })
+       }
+       else {
+           toEntry.getDirectory(formEntry.name, NO_CREATE, 
+               function (dir) {
+                   if (option && option["found"]) {
+                       option["found"](formEntry, toEntry, dir);
+                   }
+               },
+               function (error) {
+                   if (error.code == FileError.NOT_FOUND_ERR) {
+                       if (option && option["nofound"]) {
+                           option["nofound"](formEntry, toEntry);
+                       }
+                   }
+               })
+       }
+   }
+   
+   
+   function findSameNameEntry(formPath, toPath, option) {
+       if (!isString(formPath) && !isString(toPath)) {
+           _findSameNameEntry(formPath, toPath, option);
+       }
+       reqFS(fs.config.type, fs.config.size , 
+           function (fileSystem) {
+               if (isString(formPath)) {
+                   var getEntry = (option["type"] == "file") ? 
+                   fileSystem.root.getFile : fileSystem.root.getDirectory
+                   getEntry(formPath, NO_CREATE, 
+                       function (formEntry) {
+                           if (isString(toPath)) {
+                               fileSystem.root.getDirectory(toPath, NO_CREATE, 
+                                   function (toDir) {
+                                       _findSameNameEntry(formEntry, toDir, option);
+                                   },
+                                   function (error) {
+                                       executeErrorCallback(option, error);
+                                   });
+                           }
+                           else {
+                               _findSameNameEntry(formEntry, toPath, option);
+                           }
+                           
+                       },
+                       function (error) {
+                           executeErrorCallback(option, error);
+                       })
+               }
+               else {
+                   if (isString(toPath)) {
+                       fileSystem.root.getDirectory(toPath, NO_CREATE, 
+                           function (toDir) {
+                               _findSameNameEntry(formPath, toDir, option);
+                           },
+                           function (error) {
+                               executeErrorCallback(option, error);
+                           });
+                   }
+                   
+               }
+           }, 
+           function (error) {
+                executeErrorCallback(option, error);
+           });
+   }
+   
+   function getParentPath(fullPath) {
+       if (!isString(fullPath)) {
+           fullPath = fullPath.fullPath;
+       }
+       var parentPath = fullPath.substring(0, fullPath.lastIndexOf("/"));
+       if (parentPath == "") {
+           return "/";
+       }
+       return parentPath;
+   }
+   
+   function rename(fromPath, newName, option) {
+      var parentPath =  getParentPath(fromPath);
+      option["newName"] = newName;
+      move(fromPath, parentPath , option);         
+   }
+   
    fs["createNewFile"] = createNewFile;
    fs["createNewDir"] = createNewDir;
    fs["deleteFile"] = deleteFile;
@@ -279,6 +518,12 @@
    fs["getDir"] = getDir;
    fs["readFile"] = readFile;
    fs["writeFile"] = writeFile;
+   fs["move"] = move;
+   fs["copy"] = copy;
+  // fs["merge"] = merge;
+   fs["replace"] = replace;
+   fs["rename"] = rename;
+   fs["findSameNameEntry"] = findSameNameEntry;
    fs["CREATE_IF_NOT_FOUND"] = CREATE_IF_NOT_FOUND;
    fs["NO_CREATE"] = NO_CREATE;
    window.fs = fs;

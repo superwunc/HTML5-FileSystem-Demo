@@ -49,6 +49,74 @@
         }
     }
     
+    ui.PopupMenu = function (element) {
+        this.domNode = element;
+        this._events = {};
+        //popupMenuMap[element.getAttribute("id")] = this;
+        var self = this;
+        var hideCallback = function (event) {
+            self.domNode.style.display = "none";
+        }
+        bind(document.body,"mousedown",hideCallback);
+        bind(this.domNode,"mouseover",function (event) {
+            unbind(document.body,"mousedown",hideCallback);
+        });
+        bind(this.domNode,"mouseout",function (event) {
+            bind(document.body,"mousedown",hideCallback);
+        });
+        bind(this.domNode,"click",function (event) {
+            var srcElement = event.srcElement;
+            var menuNode = srcElement;
+            self.domNode.style.display = "none";
+            while(!hasClass(menuNode,"popup-menu-item")) {
+                menuNode = menuNode.parentNode;
+            }
+            if (menuNode != null && !menuNode.getAttribute("disabled")) {          
+                if (self._events["itemClick"]) {
+                    self._events["itemClick"](event, menuNode);
+                }
+            }
+            
+        });
+    }
+    
+    ui.PopupMenu.prototype.bind = function (eventName, callback) {
+        this._events[eventName] = callback;
+    }
+    
+    
+    ui.PopupMenu.prototype.setDisabled = function (index, bool) {
+        var menuNode = this.domNode;
+        var menuItemNodes =  query(menuNode, ".popup-menu-item");
+        if (bool == true) {
+            menuItemNodes[index].setAttribute("disabled", "disabled");
+        }
+        else {
+            menuItemNodes[index].removeAttribute("disabled");
+        }
+        
+    }
+    
+    ui.PopupMenu.prototype.show = function (pos) {
+        var menuNode = this.domNode;
+        menuNode.style.display = "block";
+        var menuHeight = menuNode.clientHeight;
+        
+        if ((menuHeight + pos.y) > window.innerHeight) {
+            if (pos.y > menuHeight) {
+                pos.y = pos.y - menuHeight + (pos.offsetY ? pos.offsetY : 0);
+            }
+        }
+        menuNode.style.position = "absolute";
+        menuNode.style.left = (pos.x) + "px";
+        menuNode.style.top = (pos.y) + "px";
+    }
+    
+    
+    
+    
+    
+    
     this.ui = ui;
     
     

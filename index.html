@@ -10,7 +10,7 @@
        
        <div id="file-system">
            <div id="file-system-header">
-               <p>HTML 5 文件系统 </p>
+               <h3>HTML 5 文件系统 </h3>
                <div id="file-system-toolbar">
                    <div id="add-file" class="toolbtn" title="新建文本文件"></div>
                    <div id="add-folder" class="toolbtn" title="新建文件夹"></div>
@@ -47,7 +47,15 @@
            </div>
        </div>
        <a id="download-target"></a>
-
+       <div id="fun-context-menu" class="popup-menu">
+           <ul>
+               <li class="popup-menu-item" data-command="cut" >剪切</li>
+               <li class="popup-menu-item" data-command="copy" >复制</li>
+               <li class="popup-menu-item" data-command="paste">粘贴</li>
+               <li class="popup-menu-item" data-command="cancel">取消</li>
+               <li class="popup-menu-item" data-command="rename">重命名</li>
+           </ul>
+       </div>
 
        <script type="text/javascript" src="js/base.js"></script>
        <script type="text/javascript" src="js/fs.js"></script>
