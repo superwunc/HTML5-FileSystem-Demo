@@ -28,9 +28,13 @@
     var fileSystemTree = null;
     var fileSystemContent = null;
     var fileSystemNav = null;
+    var contextMenu = null;
+    var titleRenameInput = null;
     
     
     var currentSelectedEntry = null;
+    var currentCopyEntry = null;
+    var currentCutEntry = null;
     var currentEntrys = [];
     var currentPath = null;
 
@@ -48,7 +52,10 @@
         fileSystemContent = byId("file-system-content");
         fileSystemNav = byId("file-system-nav");
         downloadTarget = byId("download-target");
-        
+        contextMenu = new ui.PopupMenu(byId("fun-context-menu"));
+        titleRenameInput = document.createElement("input");
+        titleRenameInput.style.width = "100%";
+        titleRenameInput.setAttribute("maxlength", 20);
         bindEvent();
         showDir("/");
     }
@@ -93,6 +100,25 @@
         bind(uploadFileBtn, "change", function (event) {
             uploadFile(uploadFileBtn.files);
         });
+        
+        bind(fileSystemContent,"contextmenu",function (event) {
+            onRightClickHandler(event);
+        });
+        
+        contextMenu.bind("itemClick", function (event) {
+            var srcElement = event.srcElement;
+            var dataCommand = srcElement.getAttribute("data-command");
+            executeCommand(dataCommand);
+        });
+        
+        bind(titleRenameInput, "blur", function (event) {
+            rename();
+        });
+        bind(titleRenameInput, "keydown", function (event) {
+           if (event.keyCode == 13) {
+               titleRenameInput.blur();
+           }
+        });
     }
 
     function ondblclickFolder(ele) {
@@ -105,6 +131,51 @@
         var path = ele.getAttribute("data-path");
         console.log("ondblclickFile");
         showFile(path);
+    }
+    
+
+    
+    /**
+        @description 右键菜单事件处理
+     */
+    function onRightClickHandler(event) {
+        event.preventDefault();
+        var srcElement = event.srcElement;
+        var pos = {};
+        pos.x = event.clientX;
+        pos.y = event.clientY;
+        if(isClickFolder(srcElement) == true) {
+            onclickFolder(findFolderNode(srcElement));
+            contextMenu.setDisabled(0, false);
+            contextMenu.setDisabled(1, false);
+            contextMenu.setDisabled(2, true);
+            contextMenu.setDisabled(3, true);
+            contextMenu.setDisabled(4, false);
+        }
+        else if(isClickFile(srcElement) == true) {
+            onclickFile(findFileNode(srcElement));
+            contextMenu.setDisabled(0, false);
+            contextMenu.setDisabled(1, false);
+            contextMenu.setDisabled(2, true);
+            contextMenu.setDisabled(3, true);
+            contextMenu.setDisabled(4, false);
+        }
+        else {
+            if ((currentCopyEntry != null) || (currentCutEntry != null)) {
+                contextMenu.setDisabled(0, true);
+                contextMenu.setDisabled(1, true);
+                contextMenu.setDisabled(2, false);
+                contextMenu.setDisabled(4, true);
+            }
+            else {
+               contextMenu.setDisabled(0, true);
+               contextMenu.setDisabled(1, true);
+               contextMenu.setDisabled(2, true);
+               contextMenu.setDisabled(3, true); 
+               contextMenu.setDisabled(4, true);
+            }
+        }
+        contextMenu.show(pos);
     }
     
     function removeSelectedEntryStyle() {
@@ -167,9 +238,108 @@
         fs.createNewFile(path + "/" + fileName, {
             "success" : function(file) {
                 addFileNode(file);
+                editFileName(file);
                 addEntrys([file]);
             }
         });
+    }
+    
+    function executeCommand(command) {
+        switch (command) {
+        case "cut": {
+            currentCutEntry = currentSelectedEntry;
+            break;
+        }
+        case "copy": {
+            currentCopyEntry = currentSelectedEntry;
+            break;
+        }
+        case "paste": {
+            if (currentCutEntry != null) {
+                 fs.findSameNameEntry(currentCutEntry, currentPath, {
+                    "type": (currentCutEntry.isFile == true) ? "file" : "folder", 
+                    "found": function (fromEntry, toEntry, sameEntry) {
+                         if (fromEntry.fullPath == sameEntry.fullPath) {
+                             currentCutEntry = null;
+                             return;
+                         }
+                         var result = 
+                         window.confirm("确认 要替换同名文件 \"" + fromEntry.name + "\"");
+                         if (result == false) {
+                            return ;
+                         }
+                         fs.replace(fromEntry, toEntry, sameEntry,{
+                             "type": "cut",
+                             "success": function (entry) {
+                                 currentCutEntry = null;
+                             }
+                         }); 
+                    },
+                    "nofound": function (fromEntry, toEntry) {
+                        fs.move(fromEntry, toEntry, {
+                            "success": function (entry) {
+                                if (entry.isFile == true) {
+                                    addFileNode(entry);
+                                }
+                                else {
+                                    addFolderNode(entry);
+                                }
+                                
+                                currentCutEntry = null;
+                            }
+                        });
+                    }
+                });
+                
+            }
+            else if (currentCopyEntry != null) {
+                fs.findSameNameEntry(currentCopyEntry, currentPath, {
+                    "type": (currentCopyEntry.isFile == true) ? "file" : "folder", 
+                    "found": function (fromEntry, toEntry, sameEntry) {
+                         if (fromEntry.fullPath == sameEntry.fullPath) {
+                             currentCutEntry = null;
+                             return;
+                         }
+                         var result = 
+                         window.confirm("确认 要替换同名文件 \"" + fromEntry.name + "\"");
+                         if (result == false) {
+                            return ;
+                         }
+                         fs.replace(fromEntry, toEntry, sameEntry,{
+                             "type": "copy",
+                             "success": function (entry) {
+                                 currentCopyEntry = null;
+                             }
+                         }); 
+                         
+                    },
+                    "nofound": function (fromEntry, toEntry) {
+                        fs.copy(fromEntry, toEntry, {
+                            "success": function (entry) {
+                                if (entry.isFile == true) {
+                                    addFileNode(entry);
+                                }
+                                else {
+                                    addFolderNode(entry);
+                                }
+                                currentCopyEntry = null;
+                            }
+                        });
+                    }
+                });
+            }
+            break;
+        }
+        case "cancel" : {
+            currentCutEntry = null;
+            currentCopyEntry = null;
+            break;
+        }
+        case "rename" : {
+            editEntryName(currentSelectedEntry);
+            break;
+        }
+        }
     }
 
     function deleteFile() {
@@ -259,6 +429,42 @@
                 addEntrys([dir]);
             }
         });
+    }
+    
+    function rename() {
+        var newName = titleRenameInput.value;
+        if (currentSelectedEntry.name == newName) {
+            return;
+        }
+        
+        var nodeNode = null;
+        
+        var titleNode = titleRenameInput.parentNode;
+        if (currentSelectedEntry.isFile == true) {
+            nodeNode = findFileNode(titleNode);
+        }
+        else {
+            nodeNode = findFolderNode(titleNode);
+        }
+        
+        var newNameTextNode = document.createTextNode(newName);
+        fs.rename(currentSelectedEntry, newName, {
+            "success": function (entry) {
+                window.setTimeout(function () {
+                    currentSelectedEntry = entry;
+                    if (entry.isFile) {
+                        nodeNode.id = "file-" + entry.fullPath;
+                    }
+                    else {
+                        nodeNode.id = "folder-" + entry.fullPath;
+                    }
+                    nodeNode.setAttribute("data-path", entry.fullPath);
+                    
+                    titleNode.replaceChild(newNameTextNode, titleRenameInput);
+                }, 30)
+                
+            }
+        })
     }
 
     function isClickFolder(ele) {
@@ -462,7 +668,6 @@
     }
 
     function buildFileNode(path, name) {
-        
         var node = document.createElement("div");
         var html = "";
         node.id = "file-" + path;
@@ -472,6 +677,10 @@
         html += "<div class=\"file-name\">" + name + "</div>";
         node.innerHTML = html;
         return node;
+    }
+    
+    function getFileNode(fileEntry) {
+        return byId("file-" + fileEntry.fullPath);
     }
 
     function buildFolderNode(dirEntry) {
@@ -485,6 +694,10 @@
         node.innerHTML = html;
         return node;
     }
+    
+    function getFolderNode(folderEntry) {
+        return byId("folder-" + folderEntry.fullPath);
+    }
 
     function buildFolderNavNode(fullPath, name) {
         var node = document.createElement("div");
@@ -495,6 +708,23 @@
 
         node.innerHTML = html;
         return node;
+    }
+    
+    function editEntryName(entry) {
+        var node = null;
+        var titleNode = null;
+        if (entry.isFile == true) {
+            node = getFileNode(entry);
+            titleNode = query(node, ".file-name")[0];
+        }
+        else {
+            node = getFolderNode(entry);
+            titleNode = query(node, ".folder-name")[0];
+        }
+        titleRenameInput.value = titleNode.firstChild.nodeValue;
+        titleNode.replaceChild(titleRenameInput, 
+            titleNode.firstChild);
+        titleRenameInput.select();
     }
     var filesys = {};
     filesys["init"] = init;

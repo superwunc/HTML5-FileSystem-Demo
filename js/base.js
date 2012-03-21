@@ -20,6 +20,19 @@
             ele.addEventListener(arguments[1], arguments[2], arguments[3]);
         }
     }
+    
+    /**
+        @description 封装事件解绑定
+     */
+    function unbind() {
+        var ele = arguments[0];
+        if(arguments.length == 3) {
+            ele.removeEventListener(arguments[1], arguments[2]);
+        }
+        if(arguments.length == 4) {
+            ele.removeEventListener(arguments[1], arguments[2], arguments[3]);
+        }
+    }
 
     function hasClass(ele, cls) {
         return ele.className && ele.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));
@@ -59,9 +72,11 @@
 
     this.byId = byId;
     this.bind = bind;
+    this.unbind = unbind;
     this.hasClass = hasClass;
     this.isString = isString;
     this.query = query;
     this.formatDate = formatDate;
+    
 
 })();
