@@ -142,6 +142,16 @@
    }
    
    function deleteDir(path, option) {
+        if (!isString(path)) {
+            path.removeRecursively(
+                    function () {
+                        executeSuccessCallback(option, path);
+                    },
+                    function (error) {
+                        executeErrorCallback(option, error);
+                    })
+            return;
+        }
         getDir(path, {
             "success": function (dir) {
                 dir.removeRecursively(
@@ -266,10 +276,31 @@
            "flag": flag,
            "success": function (fileEntry) {
                   fileEntry.createWriter( function (writer) {
-                        var blob = new BlobBuilder();
-                        blob.append(content);
-                        writer.write(blob.getBlob());
-                        executeSuccessCallback(option);
+                        var size = 0;
+                        writer.onerror = function (error) {
+                            executeErrorCallback(option, error);
+                        }
+                        writer.onwriteend = function () {
+                            writer.onwriteend = null;
+                            writer.truncate(size);
+                            executeSuccessCallback(option);
+                            
+                        }
+                       
+                        try {
+                             var blobBulder = new BlobBuilder();
+                             blobBulder.append(content);
+                             var blob = blobBulder.getBlob();
+                             size = blob.size;
+                             
+                             writer.write(blobBulder.getBlob());
+                             
+                             
+                        }
+                        catch (e) {
+                            console.log(e);
+                        }
+                       
                   })
                   
            },
@@ -503,10 +534,14 @@
        return parentPath;
    }
    
+   function isParent(parentPath, childPath) {
+       return getParentPath(childPath) == parentPath;
+   }
+   
    function rename(fromPath, newName, option) {
-      var parentPath =  getParentPath(fromPath);
-      option["newName"] = newName;
-      move(fromPath, parentPath , option);         
+       var parentPath =  getParentPath(fromPath);
+       option["newName"] = newName;
+       move(fromPath, parentPath , option);         
    }
    
    fs["createNewFile"] = createNewFile;
@@ -520,7 +555,7 @@
    fs["writeFile"] = writeFile;
    fs["move"] = move;
    fs["copy"] = copy;
-  // fs["merge"] = merge;
+   fs["isParent"] = isParent;
    fs["replace"] = replace;
    fs["rename"] = rename;
    fs["findSameNameEntry"] = findSameNameEntry;

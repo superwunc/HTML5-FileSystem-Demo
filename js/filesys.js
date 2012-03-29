@@ -256,79 +256,14 @@
             break;
         }
         case "paste": {
+            var fun = null;
             if (currentCutEntry != null) {
-                 fs.findSameNameEntry(currentCutEntry, currentPath, {
-                    "type": (currentCutEntry.isFile == true) ? "file" : "folder", 
-                    "found": function (fromEntry, toEntry, sameEntry) {
-                         if (fromEntry.fullPath == sameEntry.fullPath) {
-                             currentCutEntry = null;
-                             return;
-                         }
-                         var result = 
-                         window.confirm("确认 要替换同名文件 \"" + fromEntry.name + "\"");
-                         if (result == false) {
-                            return ;
-                         }
-                         fs.replace(fromEntry, toEntry, sameEntry,{
-                             "type": "cut",
-                             "success": function (entry) {
-                                 currentCutEntry = null;
-                             }
-                         }); 
-                    },
-                    "nofound": function (fromEntry, toEntry) {
-                        fs.move(fromEntry, toEntry, {
-                            "success": function (entry) {
-                                if (entry.isFile == true) {
-                                    addFileNode(entry);
-                                }
-                                else {
-                                    addFolderNode(entry);
-                                }
-                                
-                                currentCutEntry = null;
-                            }
-                        });
-                    }
-                });
-                
+                 fun = entryCutHander(currentCutEntry, currentPath);
             }
             else if (currentCopyEntry != null) {
-                fs.findSameNameEntry(currentCopyEntry, currentPath, {
-                    "type": (currentCopyEntry.isFile == true) ? "file" : "folder", 
-                    "found": function (fromEntry, toEntry, sameEntry) {
-                         if (fromEntry.fullPath == sameEntry.fullPath) {
-                             currentCutEntry = null;
-                             return;
-                         }
-                         var result = 
-                         window.confirm("确认 要替换同名文件 \"" + fromEntry.name + "\"");
-                         if (result == false) {
-                            return ;
-                         }
-                         fs.replace(fromEntry, toEntry, sameEntry,{
-                             "type": "copy",
-                             "success": function (entry) {
-                                 currentCopyEntry = null;
-                             }
-                         }); 
-                         
-                    },
-                    "nofound": function (fromEntry, toEntry) {
-                        fs.copy(fromEntry, toEntry, {
-                            "success": function (entry) {
-                                if (entry.isFile == true) {
-                                    addFileNode(entry);
-                                }
-                                else {
-                                    addFolderNode(entry);
-                                }
-                                currentCopyEntry = null;
-                            }
-                        });
-                    }
-                });
+                fun = entryCopyHander(currentCopyEntry, currentPath);
             }
+            fun.call();
             break;
         }
         case "cancel" : {
@@ -342,6 +277,349 @@
         }
         }
     }
+    
+     /**********  File Cut Hander  start *************/ 
+     
+     
+    function entryCutHander(currentCutEntry, currentPath) {
+        var d =  new Deferred();
+        d.callback.ok = function () {
+            var child =  new Deferred();
+            child._next = d._next;
+            fs.findSameNameEntry(currentCutEntry, currentPath, {
+                "type": (currentCutEntry.isFile == true) ? "file" : "folder", 
+                "found": function (fromEntry, toEntry, sameEntry) {
+                    var fun = null; 
+                    if (currentCutEntry.isFile == true) {
+                        fun = fileCutFoundHander(fromEntry, toEntry, sameEntry);
+                    }
+                    else {
+                        fun = folderCutFoundHander(fromEntry, toEntry, sameEntry);
+                    } 
+                    console.log(fun);
+                    fun._next = child._next;
+                    child._next = fun;
+                    child.call();
+                },
+                "nofound": function (fromEntry, toEntry) {
+                    var fun = fileCutNoFoundHander(fromEntry, toEntry);
+                    fun._next = child._next;
+                    child._next = fun;
+                    child.call();
+                }
+            });
+            return child
+        }
+        
+        return d;
+    }
+    
+    function folderCutFoundHander(fromEntry, toEntry, sameEntry) {
+        var d = new Deferred();
+        d.callback.ok = function () {
+            var child = new Deferred();
+            child._next = d._next;
+            window.view.conflict.show("folder-cut-conflict", {
+                "folder-cut-ok" : function(dialog) {
+                    fs.listFiles(fromEntry, {
+                        "success": function(entrys) {
+                            var temp = new Deferred();
+                            var first = temp;
+                            for(var i = 0, l = entrys.length; i < l; i++) {
+                                temp._next = entryCutHander(entrys[i], 
+                                    sameEntry.fullPath);
+                                temp = temp._next;
+                            }
+                            temp._next = sourceFolderDeleteHander(fromEntry);
+                            temp = temp._next;
+                            //first.call();
+                            temp._next = child._next;
+                            child._next = first;
+                            child.call();
+                           // first.call();
+                        } 
+                    });
+                    dialog.hide();
+                }   
+            });
+            return child;
+        }
+        
+        return d;
+    }
+    
+    function sourceFolderDeleteHander(sourceDir)   {
+        var d = new Deferred();
+        d.callback.ok = function () {
+            var child = new Deferred();
+            child._next = d._next;
+            fs.deleteDir(sourceDir , {
+                    "success": function (entry) {
+                        child.callback.ok = function () {
+                        }
+                        child.call();
+                    }
+                });
+             return child;
+        }
+        return d;
+    }
+    
+
+    function fileCutFoundHander(fromEntry, toEntry, sameEntry, callback) {
+        var d =  new Deferred();
+        d.callback.ok = function () {
+             var child = new Deferred();
+             child._next = d._next;
+             window.view.conflict.show("file-cut-conflict", {
+                "file-cut-replace": function (dialog) {
+                     fs.replace(fromEntry, toEntry, sameEntry,{
+                         "type": "cut",
+                         "success": function (entry) {
+                             child.callback.ok = function () {
+                                 dialog.hide();
+                                 currentCutEntry = null;
+                             }
+                             child.call();
+                             
+                         }
+                     });
+                },
+                "file-no-cut": function (dialog) {
+                    child.callback.ok = function () {
+                         dialog.hide();
+                        
+                    }
+                    child.call();
+                    
+                },
+                "file-cut-rename": function (dialog) {
+                    fs.move(fromEntry, toEntry, {
+                        "newName": fromEntry.name + "-副本",
+                        "success": function (entry) {
+                            child.callback.ok = function () {
+                                if (fs.isParent(currentPath, entry.fullPath)) {
+                                    addFileNode(entry);
+                                }
+                                currentCutEntry = null;
+                                dialog.hide();
+                            }
+                            
+                            dialog.hide();
+                        }
+                    }) 
+                    
+                }
+             });
+             return child;
+        }
+        return d;     
+    }
+    
+
+    
+
+    
+    function fileCutNoFoundHander(fromEntry, toEntry) {
+        var d = new Deferred();
+        d.callback.ok = function () {
+            var child = new Deferred();
+            child._next = d._next;
+            fs.move(fromEntry, toEntry, {
+                    "success": function (entry) {
+                        child.callback.ok = function () {
+                            if (fs.isParent(currentPath, entry.fullPath)) {
+                                if (entry.isFile == true) {
+                                    addFileNode(entry);
+                                }
+                                else {
+                                    addFolderNode(entry);
+                                }
+                                
+                                currentCutEntry = null;
+                            } 
+                        }
+                        child.call();
+                    }
+                });
+             return child;
+        }
+        return d;
+        
+    }
+    
+    /**********  File Cut Hander  end *************/ 
+    
+
+    
+    
+    
+    
+    
+   /**********  File Copy Hander  start *************/ 
+   
+   
+   
+   function entryCopyHander(currentCopyEntry, currentPath) {
+        var d =  new Deferred();
+        d.callback.ok = function () {
+            var child = new Deferred();
+            child._next = d._next;
+            fs.findSameNameEntry(currentCopyEntry, currentPath, {
+                "type" : (currentCopyEntry.isFile == true) ? "file" : "folder",
+                "found" : function(fromEntry, toEntry, sameEntry) {
+                    var fun = null;
+                    if(currentCopyEntry.isFile == true) {
+                        fun = fileCopyFoundHander(fromEntry, 
+                            toEntry, sameEntry);
+                    }
+                    else {
+                        fun = folderCopyFoundHander(fromEntry, 
+                            toEntry, sameEntry);
+                    }
+                    fun._next = child._next;
+                    child._next = fun;
+                    child.call();
+                },
+                "nofound" : function(fromEntry, toEntry) {
+                    var fun = entryCopyNoFoundHander(fromEntry, toEntry);
+                    fun._next = child._next;
+                    child._next = fun;
+                    
+                    child.call();
+                }
+            });
+            return child;
+        }
+        
+        return d;
+    }
+
+    function folderCopyFoundHander(fromEntry, toEntry, sameEntry) {
+        var d = new Deferred();
+        d.callback.ok = function () {
+            var child =  new Deferred();
+            child._next = d._next;
+            window.view.conflict.show("folder-copy-conflict", {
+                "folder-copy-ok" : function(dialog) {
+                    fs.listFiles(fromEntry, {
+                        "success": function(entrys) {
+                            var temp = new Deferred();
+                            var first = temp;
+                            for(var i = 0, l = entrys.length; i < l; i++) {
+                                temp._next = entryCopyHander(entrys[i], 
+                                    sameEntry.fullPath);
+                                temp = temp._next;
+                            }
+                            //first.call();
+                            temp._next = child._next;
+                            child._next = first;
+                            child.call();
+                            
+                              
+                    }});
+                    dialog.hide();    
+            }});
+            return child;
+        }
+        return d;
+    }
+
+    function fileCopyFoundHander(fromEntry, toEntry, sameEntry) {
+        var d =  new Deferred();
+        d.callback.ok = function () {
+            var child = new Deferred();
+            child._next = d._next;
+            window.view.conflict.show("file-copy-conflict", {
+                "file-copy-replace" : function(dialog) {
+                    fs.replace(fromEntry, toEntry, sameEntry, {
+                        "type" : "copy",
+                        "success" : function(entry) {
+                            child.callback.ok = function () {
+                                currentCopyEntry = null;
+                                dialog.hide();
+                            }
+                            child.call();
+                        }
+                    });
+                },
+                "file-no-copy" : function(dialog) {
+                    child.callback.ok = function () {
+                        dialog.hide();
+                    }
+                    child.call();
+                },
+                "file-copy-rename" : function(dialog) {
+                    fs.copy(fromEntry, toEntry, {
+                        "newName" : fromEntry.name + "-副本",
+                        "success" : function(entry) {
+                            child.callback.ok = function () {
+                                if (fs.isParent(currentPath, entry.fullPath)) {
+                                    addFileNode(entry);
+                                }
+                                currentCopyEntry = null;
+                                dialog.hide();
+                            }
+                            child.call();
+                        }
+                    });
+                }
+            });
+            return child;
+        }
+        
+        return d;
+    }
+
+    function entryCopyNoFoundHander(fromEntry, toEntry) {
+        var d = new Deferred();
+        d.callback.ok = function () {
+            var child = new Deferred();
+            child._next = d._next;
+            fs.copy(fromEntry, toEntry, {
+                "success" : function(entry) {
+                    child.callback.ok = function () {
+                            if (fs.isParent(currentPath, entry.fullPath)) {
+                                if(entry.isFile == true) {
+                                    addFileNode(entry);
+                                }
+                                else {
+                                    addFolderNode(entry);
+                                }
+                                currentCopyEntry = null;
+                            }   
+                    }
+                    child.call();
+                }
+            });
+            return child; 
+        }
+        return d;
+    }
+    
+    
+    /**********  File Copy Hander  end *************/ 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     function deleteFile() {
         if(currentSelectedEntry == null) {
@@ -449,13 +727,15 @@
             currentSelectedEntry.fullPath == editEntry.fullPath)) {
             isResetCurrentSelected = true;
         }
-        if (editEntry.name == newName) {
-            return;
-        }
+       
         
         var nodeNode = null;
         
         var titleNode = titleRenameInput.parentNode;
+        if (editEntry.name == newName) {
+            titleNode.replaceChild(document.createTextNode(newName), titleRenameInput);
+            return;
+        }
         if (editEntry.isFile == true) {
             nodeNode = findFileNode(titleNode);
         }
@@ -634,12 +914,17 @@
         fileSystemNav.innerHTML = "";
         currentPath = dir.fullPath;
         var paths = dir.fullPath.split("/");
+        console.log(paths);
         var tempPath = "";
         for(var i = 0, l = (paths.length); i < l; i++) {
             if(i == (l - 1) && paths[i] == "") {
                 return;
             }
-            var path = tempPath + ((paths[i] == "") ? "/" : paths[i]);
+            if (paths[i] == "") {
+                fileSystemNav.appendChild(buildFolderNavNode("/", ""));
+                continue;
+            }
+            var path = tempPath + ((paths[i] == "") ? "/" : "/" + paths[i]);
             tempPath = path;
             var name = paths[i];
             fileSystemNav.appendChild(buildFolderNavNode(path, name));

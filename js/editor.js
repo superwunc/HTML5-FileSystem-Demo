@@ -43,6 +43,7 @@
     
     function showTxt(path, file, content) {
         currentPath = path;
+        txtEditor.value = "";
         txtEditor.value = content;
         txtTitle.innerHTML = "<div>" + file.name + "</div>" 
         + "<div>" + formatDate(file.lastModifiedDate) + "</div>" ;
