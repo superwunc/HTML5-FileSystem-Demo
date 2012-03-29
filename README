@@ -21,5 +21,7 @@ V0.1.1 功能新增
 V0.1.2 功能增强 
 1)修正写文件的问题(写文件，没有清空之前写的)
 2)完善了同名文件，文件夹的剪切和拷贝
+注:因为文件的操作是异步的，所以对文件夹以及内嵌文件的处理使用了异步JS库(JsDeferred http://cho45.stfuawsc.com/jsdeferred/)
+
 
 DEMO地址   http://superwunc.github.com/HTML5-FileSystem-Demo/
