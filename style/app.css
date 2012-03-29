@@ -41,6 +41,29 @@
 .dialog-toolbar {
     text-align: right;
 }
+
+.conflict-dialog .dialog-content {
+    margin-top: 70px;
+    width: auto;
+    height: auto;
+}
+
+.conflict-dialog ul {
+    list-style: none;
+    cursor: default;
+    margin: 0px;
+    padding: 0px;
+}
+.conflict-dialog li {
+    padding: 5px;
+    border: 1px solid transparent;
+}
+
+.conflict-dialog li:hover {
+    border-color: #010101;
+    color: #ffffff;
+    background: -webkit-gradient(linear, 0 0, 0 100%, from(#0061a4), to(#003b6a));
+}
 /* dialog style end */
 
 .popup-menu {
@@ -163,11 +186,19 @@ p , h3 {
     background: url(images/file-save.png) center center no-repeat, 
     -webkit-gradient(linear, 0 0, 0 100%, from(#c2c2c2), to(#555555));
 }
-#cancel {
+.ok-btn {
+    background: url(images/ok.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#292929), to(#181818));
+}
+.ok-btn:hover {
+    background: url(images/ok.png) center center no-repeat, 
+    -webkit-gradient(linear, 0 0, 0 100%, from(#c2c2c2), to(#555555));
+}
+.cancel-btn {
     background: url(images/cancel.png) center center no-repeat, 
     -webkit-gradient(linear, 0 0, 0 100%, from(#292929), to(#181818));
 }
-#cancel:hover {
+.cancel-btn:hover {
     background: url(images/cancel.png) center center no-repeat, 
     -webkit-gradient(linear, 0 0, 0 100%, from(#c2c2c2), to(#555555));
 }

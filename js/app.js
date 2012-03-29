@@ -10,6 +10,7 @@
     var view = window.view;
     view.filesys.init();
     view.editor.init();
+    view.conflict.init();
     
     
 })();

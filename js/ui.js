@@ -112,6 +112,10 @@
         menuNode.style.top = (pos.y) + "px";
     }
     
+    ui.PopupMenu.prototype.hide = function () {
+        this.domNode.style.display = "none";
+    }
+    
     
     
     

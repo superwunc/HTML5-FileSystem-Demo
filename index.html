@@ -36,7 +36,7 @@
            </div>
            <div class="dialog-toolbar">
                <div id="save" class="toolbtn"></div>
-               <div id="cancel" class="toolbtn close-btn"></div>
+               <div id="cancel" class="toolbtn close-btn cancel-btn"></div>
            </div>
        </div>
         <div id="image-editor-dialog" class="dialog" >
@@ -44,6 +44,74 @@
            <div class="dialog-close close-btn"></div>
            <div class="dialog-content">
                <img id="image-editor"/>
+           </div>
+       </div>
+       <div id="file-copy-conflict-dialog" class="dialog conflict-dialog">
+           <div class="dialog-title">
+               <p>此位置已经包含同名文件</p>
+               <p>请单击要保留的文件</p>
+           </div>
+           <div class="dialog-close close-btn"></div>
+           <div class="dialog-content">
+               <ul>
+                   <li data-command="file-copy-replace">
+                       <p>复制和替换</p>
+                       <p>使用正在复制的文件替换目标文件夹中的文件:</p>
+                   </li>
+                   <li data-command="file-no-copy">
+                       <p>不要复制</p>
+                       <p>将不会更改任何文件。将此文件保留在目标文件夹中:</p>
+                   </li>
+                   <li data-command="file-copy-rename">
+                       <p>复制, 但保留这两个文件</p>
+                   </li>
+               </ul>
+           </div>
+       </div>
+       <div id="file-cut-conflict-dialog" class="dialog conflict-dialog">
+           <div class="dialog-title">
+               <p>此位置已经包含同名文件</p>
+               <p>请单击要保留的文件</p>
+           </div>
+           <div class="dialog-close close-btn"></div>
+           <div class="dialog-content">
+               <ul>
+                   <li data-command="file-cut-replace">
+                       <p>移动和替换</p>
+                       <p>使用正在移动的文件替换目标文件夹中的文件:</p>
+                   </li>
+                   <li data-command="file-no-cut">
+                       <p>请勿移动</p>
+                       <p>将不会更改任何文件。将此文件保留在目标文件夹中:</p>
+                   </li>
+                   <li data-command="file-cut-rename">
+                       <p>移动, 但保留这两个文件</p>
+                   </li>
+               </ul>
+           </div>
+       </div>
+       <div id="folder-copy-conflict-dialog" class="dialog conflict-dialog">
+           <div class="dialog-close close-btn"></div>
+           <div class="dialog-content" style="margin-top: 20px;">
+               <p>此目标已包含名为  的文件夹</p>
+               <p>如果任何文件使用相同的名称,将会询问您是否要替换这些文件。</p>
+               <p>您仍想将这个文件夹进行合并么？</p> 
+           </div>
+           <div class="dialog-toolbar">
+               <div  class="toolbtn ok-btn" data-command="folder-copy-ok"></div>
+               <div  class="toolbtn close-btn cancel-btn"></div>
+           </div>
+       </div>
+       <div id="folder-cut-conflict-dialog" class="dialog conflict-dialog">
+           <div class="dialog-close close-btn"></div>
+           <div class="dialog-content" style="margin-top: 20px;">
+               <p>此目标已包含名为  的文件夹</p>
+               <p>如果任何文件使用相同的名称,将会询问您是否要替换这些文件。</p>
+               <p>您仍想将这个文件夹进行合并么？</p> 
+           </div>
+           <div class="dialog-toolbar">
+               <div  class="toolbtn ok-btn" data-command="folder-cut-ok"></div>
+               <div  class="toolbtn close-btn cancel-btn"></div>
            </div>
        </div>
        <a id="download-target"></a>
@@ -56,12 +124,15 @@
                <li class="popup-menu-item" data-command="rename">重命名</li>
            </ul>
        </div>
+       
+       <script type="text/javascript" src="lib/jsdeferred.js"></script>
 
        <script type="text/javascript" src="js/base.js"></script>
        <script type="text/javascript" src="js/fs.js"></script>
        <script type="text/javascript" src="js/ui.js"></script>
        <script type="text/javascript" src="js/filesys.js"></script>
        <script type="text/javascript" src="js/editor.js"></script>
+       <script type="text/javascript" src="js/conflict.js"></script>
        <script type="text/javascript" src="js/app.js"></script>
     </body>
 </html>
