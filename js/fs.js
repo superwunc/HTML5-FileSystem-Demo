@@ -288,12 +288,13 @@
                         }
                        
                         try {
-                             var blobBulder = new BlobBuilder();
-                             blobBulder.append(content);
-                             var blob = blobBulder.getBlob();
-                             size = blob.size;
+
+                             var blob = new Blob([content], {type : 'text/html'});
+                            // blobBulder.append(content);
+                            // var blob = blobBulder.getBlob();
+                            // size = blob.size;
                              
-                             writer.write(blobBulder.getBlob());
+                             writer.write(blob);
                              
                              
                         }
