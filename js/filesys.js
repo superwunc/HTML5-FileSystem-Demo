@@ -837,7 +837,7 @@
                    "success": function (entryArray) {
                         addEntrys(entryArray);
                         for(var i = 0, l = entryArray.length; i < l; i++) {
-                            var entry = entryArray.item(i);
+                            var entry = entryArray[i];
                             if(entry.isFile == true) {
                                 addFileNode(entry);
                             }
